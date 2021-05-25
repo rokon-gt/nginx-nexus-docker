@@ -1,25 +1,5 @@
 #!/bin/bash
 
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-
-#    http://www.apache.org/licenses/LICENSE-2.0
-
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
-# ............................... DISCLAIMER ............................ #
-#
-#These scripts come without warranty of any kind. Use them at your own risk.
-#I assume no liability for the accuracy, correctness, completeness, or usefulness
-#of any information provided by this script nor for any sort of damages using
-#these scripts may cause.
-# ....................................................................... #
-
 # Create certs directory
 mkdir ../certs
 
@@ -27,28 +7,29 @@ mkdir ../certs
 openssl genrsa -passout pass:"$1" -des3 -out ../certs/rootCA.key 2048
 
 # Generate Root PEM (rootCA.pem) with 1024 days validity.
-openssl req -passin pass:"$1" -subj "/C=US/ST=Random/L=Random/O=Global Security/OU=IT Department/CN=Local Certificate"  -x509 -new -nodes -key ../certs/rootCA.key -sha256 -days 1024 -out ../certs/rootCA.pem
+openssl req -passin pass:"$1" -subj "/C=US/ST=Random/L=Random/O=Global Security/OU=DevOps/CN=Local Certificate"  -x509 -new -nodes -key ../certs/rootCA.key -sha256 -days 1024 -out ../certs/rootCA.pem
 
 # Add root cert as trusted cert
-if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-        # Linux
-        yum -y install ca-certificates
-        update-ca-trust force-enable
-        cp ../certs/rootCA.pem /etc/pki/ca-trust/source/anchors/
-        update-ca-trust
-elif [[ "$OSTYPE" == "darwin"* ]]; then
+#if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+#        # Linux
+#        yum -y install ca-certificates
+        apt-get install ca-certificates -y
+#        update-ca-certificates
+        cp ../certs/rootCA.pem /usr/local/share/ca-certificates/
+        update-ca-certificates
+#elif [[ "$OSTYPE" == "darwin"* ]]; then
         # Mac OSX
-        security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain ../certs/rootCA.pem
-else
+#        security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain ../certs/rootCA.pem
+#else
         # Unknown.
-        echo "Couldn't find desired Operating System. Exiting Now ......"
-        exit 1
-fi
+#        echo "Couldn't find desired Operating System. Exiting Now ......"
+#        exit 1
+#fi
 
 
 # Generate nexus Cert
-openssl req -subj "/C=US/ST=Random/L=Random/O=Global Security/OU=IT Department/CN=localhost"  -new -sha256 -nodes -out ../certs/nexus.csr -newkey rsa:2048 -keyout ../certs/nexuskey.pem
-openssl x509 -req -passin pass:"$1" -in ../certs/nexus.csr -CA ../certs/rootCA.pem -CAkey ../certs/rootCA.key -CAcreateserial -out ../certs/nexuscert.crt -days 500 -sha256 -extfile <(printf "subjectAltName=DNS:localhost,DNS:nexus-repo")
+openssl req -subj "/C=US/ST=Random/L=Random/O=Global Security/OU=DevOps/CN=registry.gigatechltd.com"  -new -sha256 -nodes -out ../certs/nexus.csr -newkey rsa:2048 -keyout ../certs/nexuskey.pem
+openssl x509 -req -passin pass:"$1" -in ../certs/nexus.csr -CA ../certs/rootCA.pem -CAkey ../certs/rootCA.key -CAcreateserial -out ../certs/nexuscert.crt -days 500 -sha256 -extfile <(printf "subjectAltName=DNS:registry.gigatechltd.com,DNS:nexus-repo")
 
 cd ../nginx/
 echo $PWD
