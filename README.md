@@ -13,9 +13,9 @@ Installation Guide
 
 Pre-requisite
 -------------
-Docker
-Docker-copose
-Openssl
+1.Docker
+2.Docker-compose
+3.Openssl
 
 apt-get install docker
 apt-get install openssl
